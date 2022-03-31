@@ -8,10 +8,16 @@ import Text.Printf
 import qualified Refs as R
 import qualified Dataset as D
 
+{-}
+task0 = ("Task 0", [
+    expect (transform_row_task1 D.eight_hours !! 1) (
+])
+-}
 
 task1 = ("Task 1", [
         expect (compute_average_steps D.eight_hours) toBeSorted R.task1
    ])
+
 
 task2 = ("Task 2", [
         expect (get_passed_people_num D.eight_hours) toBe 97,

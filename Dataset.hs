@@ -6,6 +6,8 @@
 
     DO NOT MODIFY THIS FILE! If you suspect that anything is wrong, post on FORUM!!
 -}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use camelCase" #-}
 module Dataset where
 
 emails = [["Name","Email"],
@@ -177,7 +179,7 @@ emails = [["Name","Email"],
     ["Landon Skyler","Landon.Skyler@stud.cs.pub.ro"],
     ["Jameson Melanie","Jameson.Melanie@stud.cs.pub.ro"],
     ["Thomas Stella","Thomas.Stella@stud.cs.pub.ro"],
-    ["Aaron Naomi","Aaron.Naomi@stud.cs.pub.ro"],
+    ["Aaron Naomi","Aaron.Naomi@std.cs.pub.ro"],
     ["Christian Lelani","Christian.Lelani@stud.cs.pub.ro"],
     ["Xavier Isabelle","Xavier.Isabelle@stud.cs.pub.ro"],
     ["Nolan Bella","Nolan.Bella@stud.cs.pub.ro"],
