@@ -67,20 +67,20 @@ get_passed_people_num m = foldl (\acc el -> if get_number_of_steps_row el >= 100
 
 
 -- Get the total number of people
-get_num_people :: Table -> Int
-get_num_people m = length m - 1
+get_num_people :: Table -> Float
+get_num_people m = fromIntegral (length m - 1)
 
 -- Percentage of people who have achieved their:
 -- The number of people that achived their goal / number of people
 get_passed_people_percentage :: Table -> Float
-get_passed_people_percentage m = fromIntegral (get_passed_people_num m) / fromIntegral (get_num_people m)
+get_passed_people_percentage m = fromIntegral (get_passed_people_num m) / get_num_people m
 
 
 -- Average number of daily steps
 
 -- The average of the number of daily steps from all people
 get_steps_avg :: Table -> Float
-get_steps_avg m = sum (map get_number_of_steps_row (tail m)) / fromIntegral (get_num_people m)
+get_steps_avg m = sum (map get_number_of_steps_row (tail m)) / get_num_people m
 
 
 
@@ -92,7 +92,7 @@ transpose_matrix ([]:_) = []
 transpose_matrix m = map head m:transpose_matrix (map tail m)
 
 --get_column :: Table -> Row
-get_average :: Float -> Float -> Float 
+get_average :: Float -> Float -> Float
 get_average x y = x / y
 
 --get_average_steps :: Float -> Float 
@@ -104,10 +104,13 @@ create_row_of_avg x = ["dsa"]
 foldr (\row acc->
     print (get_number_of_steps_row row): acc) [] (tail (transpose_matrix m))
 -}
+get_avg_steps_aux :: [Float] -> Float  -> Row
+get_avg_steps_aux matrix x = map (printf "%.2f" . (`get_average` x)) matrix
+
 
 get_avg_steps_per_h :: Table -> Table
-get_avg_steps_per_h m = ["H10","H11","H12","H13","H14","H15","H16","H17"]
-    : map (show . get_number_of_steps_row) tail(transpose_matrix (tail m))
+get_avg_steps_per_h m = [["H10","H11","H12","H13","H14","H15","H16","H17"],
+     get_avg_steps_aux (map get_number_of_steps_row (tail (transpose_matrix m))) (get_num_people m)]
 
 
 -- Task 4
