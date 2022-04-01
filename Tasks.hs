@@ -140,14 +140,76 @@ get_activ_summary m = ["column", "range1", "range2", "range3"] : get_activ_summa
 
 -- Task 5
 
+{-
+Idea: create the header row then use a use a function that takes the table
+and sorts it by getting the total number of steps
+
+-}
+
+-- get the number of steps for a particular person
+get_total_num_of_steps :: Row -> Float
+get_total_num_of_steps = sum . map read . tail
+
+
+-- sort the rows by number of total steps
+get_sorted_rankings :: Table -> Table
+get_sorted_rankings = sortBy myCmp where
+    myCmp row1 row2
+        |   get_total_num_of_steps row1 > get_total_num_of_steps row2 = GT
+        |   get_total_num_of_steps row1 == get_total_num_of_steps row2 = EQ
+        |   otherwise = LT
+
 get_ranking :: Table -> Table
-get_ranking m = undefined
+get_ranking m = ["Name", "Total Steps"] : get_sorted_rankings (tail m)
 
 
 -- Task 6
+{-
+Idea:
+- Create the header
+- Have a function that sort the table by using the diff between the averages
+- Have a function that computes the average for the first part
+- Have a function that computes the average for the second part
+- Have a function that computes the diff for a row
+-}
 
+{-
+Could have used indexed but wanted to write something that scales better
+-}
+get_sum_first_part :: Int -> Row -> Float
+get_sum_first_part 4 _ = 0.0
+get_sum_first_part counter [] = 0.0
+get_sum_first_part counter (x:xs) = read x + get_sum_first_part (counter + 1) xs
+
+get_sum_second_part :: Row -> Float
+get_sum_second_part row = get_total_num_of_steps row - get_sum_first_part 0 (tail row)
+
+get_average_first_part :: Row -> Float
+get_average_first_part row = get_average (get_sum_first_part 0 $ tail row) 4.0
+
+get_average_second_part :: Row -> Float
+get_average_second_part row = get_average (get_sum_second_part row) 4.0
+
+get_diff :: Row -> Float
+get_diff row = abs (get_average_first_part row - get_average_second_part row)
+
+-- sorts the table
+get_sorted_diff_table :: Table -> Table
+get_sorted_diff_table = sortBy myCmp where
+    myCmp row1 row2
+        |   get_diff row1 > get_diff row2 = GT
+        |   get_diff row1 == get_diff row2 = EQ
+        |   otherwise = LT
+
+-- applies the transformation to each row
+get_steps_diff_table_aux :: Table -> Table
+get_steps_diff_table_aux = map (\row -> [head row, printf "%.2f" (get_average_first_part row),printf "%.2f" (get_average_second_part row), printf "%.2f" (get_diff row)])
+
+
+-- put the header then append the rest of the transformed table
+-- before we sort by difference we sort by name (alphabetical) to get the correct order
 get_steps_diff_table :: Table -> Table
-get_steps_diff_table m = undefined
+get_steps_diff_table m = ["Name","Average first 4h","Average last 4h","Difference"] : get_steps_diff_table_aux (get_sorted_diff_table (sort (tail m)))
 
 
 -- Task 7
