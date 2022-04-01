@@ -214,17 +214,26 @@ get_steps_diff_table m = ["Name","Average first 4h","Average last 4h","Differenc
 
 -- Task 7
 
+{-
+mapr :: (a -> b) -> [a] -> [b]
+mapr f = foldr ((:) . f) []
+-}
+
+testFunc :: Value -> Value
+testFunc v = v ++ "test"
+
 -- Applies the given function to all the values
 vmap :: (Value -> Value) -> Table -> Table
-vmap f m = undefined
-
+vmap f = map (map f)
 
 -- Task 8
+testFunc2 :: Row -> Row
+testFunc2 = map (++ "test")
 
 -- Applies the given function to all the entries
 rmap :: (Row -> Row) -> [String] -> Table -> Table
-rmap f s m = undefined
+rmap f s m =  s : tail (map f m)
 
-
+-- add the name then calculate the sum with a fold and transform the output to a string with specified format
 get_sleep_total :: Row -> Row
-get_sleep_total r = undefined
+get_sleep_total r = [head r, printf "%.02f" (foldr (\el acc -> (read el :: Float) + acc) 0.0 (tail r))]
