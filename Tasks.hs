@@ -87,27 +87,25 @@ get_steps_avg m = sum (map get_number_of_steps_row (tail m)) / get_num_people m
 -- Task 3
 
 
-transpose_matrix :: [[Value]] -> [[Value]]
+
+transpose_matrix :: Table -> Table
 transpose_matrix ([]:_) = []
 transpose_matrix m = map head m:transpose_matrix (map tail m)
 
---get_column :: Table -> Row
 get_average :: Float -> Float -> Float
 get_average x y = x / y
-
---get_average_steps :: Float -> Float 
-
-create_row_of_avg :: Table -> Row
-create_row_of_avg x = ["dsa"]
 
 {-
 foldr (\row acc->
     print (get_number_of_steps_row row): acc) [] (tail (transpose_matrix m))
 -}
+
+-- transforms a vector of floats to a vector of strings that contain the averages
 get_avg_steps_aux :: [Float] -> Float  -> Row
 get_avg_steps_aux matrix x = map (printf "%.2f" . (`get_average` x)) matrix
 
-
+-- adds the header row then uses th aux func to add the averages for each hour
+-- we transpose the matrix in order to get each column
 get_avg_steps_per_h :: Table -> Table
 get_avg_steps_per_h m = [["H10","H11","H12","H13","H14","H15","H16","H17"],
      get_avg_steps_aux (map get_number_of_steps_row (tail (transpose_matrix m))) (get_num_people m)]
@@ -115,8 +113,29 @@ get_avg_steps_per_h m = [["H10","H11","H12","H13","H14","H15","H16","H17"],
 
 -- Task 4
 
+{-
+Steps:
+-extract the columns for very/fairly/lightly active minutes and transoform them into rows
+-for each category calculate the number of people and then add them to the table
+-}
+
+-- Extracts the columns relevant to the exercise
+extract_relevant_columns :: Table -> Table
+extract_relevant_columns = tail . tail . tail
+
+get_num_of_people_for_range :: Row -> Int -> Int -> Int
+get_num_of_people_for_range row left right = foldr (\time acc -> if read time >= left && read time < right then acc + 1 else acc) 0 (tail row)
+
+get_row_of_ranges :: Row -> Row
+get_row_of_ranges row = [show (get_num_of_people_for_range row 0 50), show (get_num_of_people_for_range row 50 100), show (get_num_of_people_for_range row 100 500)]
+
+-- gets the column for each type of minute, counts the number of people and 
+-- returns a table 
+get_activ_summary_aux :: Table -> Table
+get_activ_summary_aux = map (\row -> head row : get_row_of_ranges row)
+
 get_activ_summary :: Table -> Table
-get_activ_summary m = undefined
+get_activ_summary m = ["column", "range1", "range2", "range3"] : get_activ_summary_aux (extract_relevant_columns . transpose_matrix $ m )
 
 
 -- Task 5
