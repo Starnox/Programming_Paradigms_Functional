@@ -1,14 +1,12 @@
+#### Proiect Paradigme de Programare (Programming Paradigms)
+## Elev: Mihailescu Eduard-Florin
+## Grupa: 322CB
 
-===== Usage
+### Descriere Generala
+This code is meant to solve a challenge given by the Programming Paradigms team
+as part of the curriculum studying at Faculty of Automatic Control and Computers 
+in Bucharest. In this README I will go over the general ideas regarding each of the tasks,
+and more technical notes can be found in the code
 
-Test suites are represented by a tuple.
-
-``` Haskell
-task1 = ("Task 1", [    
-		expect 2.3 toRoundTo 2,    
-                expect "a" toBe "a",    
-                expect True toNotBe False    
-        ]) 
-```
-
-We register tests by adding them to `test_suites` list.
+## Part 1
+CSV files parsing, handling and transformations

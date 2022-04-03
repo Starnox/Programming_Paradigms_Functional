@@ -46,9 +46,12 @@ write_csv = (foldr (++) []).
 
 -- Task 1
 
+-- get the total sum of steps from the eight hours table
 get_number_of_steps_row :: Row -> Float
 get_number_of_steps_row row = sum (map read (tail row))
 
+-- aux function that takes a row and returns another row with the name and the
+-- average steps
 transform_row_task1 :: Row -> Row
 transform_row_task1 current_row = [head current_row,  get_steps current_row] where
     get_steps current_row = printf "%.2f" ( get_number_of_steps_row current_row / 8)
@@ -82,11 +85,7 @@ get_passed_people_percentage m = fromIntegral (get_passed_people_num m) / get_nu
 get_steps_avg :: Table -> Float
 get_steps_avg m = sum (map get_number_of_steps_row (tail m)) / get_num_people m
 
-
-
 -- Task 3
-
-
 
 transpose_matrix :: Table -> Table
 transpose_matrix ([]:_) = []
@@ -94,11 +93,6 @@ transpose_matrix m = map head m:transpose_matrix (map tail m)
 
 get_average :: Float -> Float -> Float
 get_average x y = x / y
-
-{-
-foldr (\row acc->
-    print (get_number_of_steps_row row): acc) [] (tail (transpose_matrix m))
--}
 
 -- transforms a vector of floats to a vector of strings that contain the averages
 get_avg_steps_aux :: [Float] -> Float  -> Row
@@ -215,11 +209,6 @@ get_steps_diff_table m = ["Name","Average first 4h","Average last 4h","Differenc
 
 
 -- Task 7
-
-{-
-mapr :: (a -> b) -> [a] -> [b]
-mapr f = foldr ((:) . f) []
--}
 
 testFunc :: Value -> Value
 testFunc v = v ++ "test"
