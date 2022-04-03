@@ -147,20 +147,22 @@ and sorts it by getting the total number of steps
 -}
 
 -- get the number of steps for a particular person
-get_total_num_of_steps :: Row -> Float
-get_total_num_of_steps = sum . map read . tail
-
+get_tot_steps :: Row -> Int
+get_tot_steps = read . head . tail
 
 -- sort the rows by number of total steps
 get_sorted_rankings :: Table -> Table
 get_sorted_rankings = sortBy myCmp where
     myCmp row1 row2
-        |   get_total_num_of_steps row1 > get_total_num_of_steps row2 = GT
-        |   get_total_num_of_steps row1 == get_total_num_of_steps row2 = EQ
+        |   get_tot_steps row1 > get_tot_steps row2 = GT
+        |   get_tot_steps row1 == get_tot_steps row2 = EQ
         |   otherwise = LT
 
+transform_row_total_steps :: Table -> Table
+transform_row_total_steps = map (\row -> [head row , show (get_tot_steps row)])
+
 get_ranking :: Table -> Table
-get_ranking m = ["Name", "Total Steps"] : get_sorted_rankings (tail m)
+get_ranking m = ["Name", "Total Steps"] :  transform_row_total_steps (get_sorted_rankings (sort (tail m)))
 
 
 -- Task 6
@@ -182,7 +184,7 @@ get_sum_first_part counter [] = 0.0
 get_sum_first_part counter (x:xs) = read x + get_sum_first_part (counter + 1) xs
 
 get_sum_second_part :: Row -> Float
-get_sum_second_part row = get_total_num_of_steps row - get_sum_first_part 0 (tail row)
+get_sum_second_part row = get_number_of_steps_row row - get_sum_first_part 0 (tail row)
 
 get_average_first_part :: Row -> Float
 get_average_first_part row = get_average (get_sum_first_part 0 $ tail row) 4.0
