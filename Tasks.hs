@@ -3,7 +3,6 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# HLINT ignore "Use camelCase" #-}
 
 
 -- ==================================================
@@ -56,6 +55,7 @@ transform_row_task1 :: Row -> Row
 transform_row_task1 current_row = [head current_row,  get_steps current_row] where
     get_steps current_row = printf "%.2f" ( get_number_of_steps_row current_row / 8)
 
+-- add the header then use the aux function to get the average for each row
 compute_average_steps :: Table -> Table
 compute_average_steps m =  ["Name", "Average Number of Steps"] : map transform_row_task1 (tail m)
 
@@ -63,6 +63,7 @@ compute_average_steps m =  ["Name", "Average Number of Steps"] : map transform_r
 -- Task 2
 
 -- Number of people who have achieved their goal:
+-- made using a fold the goes through each row and does the verification
 get_passed_people_num :: Table -> Int
 get_passed_people_num m = foldl (\acc el -> if get_number_of_steps_row el >= 1000
     then acc + 1 else acc) 0 (tail m)
@@ -87,10 +88,12 @@ get_steps_avg m = sum (map get_number_of_steps_row (tail m)) / get_num_people m
 
 -- Task 3
 
+-- swaping rows with columns
 transpose_matrix :: Table -> Table
 transpose_matrix ([]:_) = []
 transpose_matrix m = map head m:transpose_matrix (map tail m)
 
+-- aux function
 get_average :: Float -> Float -> Float
 get_average x y = x / y
 
@@ -117,9 +120,11 @@ Steps:
 extract_relevant_columns :: Table -> Table
 extract_relevant_columns = tail . tail . tail
 
+-- calculate the number of people for a specific range
 get_num_of_people_for_range :: Row -> Int -> Int -> Int
 get_num_of_people_for_range row left right = foldr (\time acc -> if read time >= left && read time < right then acc + 1 else acc) 0 (tail row)
 
+-- create a row that contains an entry for each time interval
 get_row_of_ranges :: Row -> Row
 get_row_of_ranges row = [show (get_num_of_people_for_range row 0 50), show (get_num_of_people_for_range row 50 100), show (get_num_of_people_for_range row 100 500)]
 
@@ -152,9 +157,11 @@ get_sorted_rankings = sortBy myCmp where
         |   get_tot_steps row1 == get_tot_steps row2 = EQ
         |   otherwise = LT
 
+-- get only the relevant info from the table
 transform_row_total_steps :: Table -> Table
 transform_row_total_steps = map (\row -> [head row , show (get_tot_steps row)])
 
+-- add the header and then add the calculated rows
 get_ranking :: Table -> Table
 get_ranking m = ["Name", "Total Steps"] :  transform_row_total_steps (get_sorted_rankings (sort (tail m)))
 
@@ -194,7 +201,7 @@ get_sorted_diff_table :: Table -> Table
 get_sorted_diff_table = sortBy myCmp where
     myCmp row1 row2
         |   get_diff row1 > get_diff row2 = GT
-        |   get_diff row1 == get_diff row2 = EQ
+        |   get_diff row1 == get_diff row2 = compare (head row1) (head row2) -- compare alphabetically
         |   otherwise = LT
 
 -- applies the transformation to each row
@@ -203,9 +210,8 @@ get_steps_diff_table_aux = map (\row -> [head row, printf "%.2f" (get_average_fi
 
 
 -- put the header then append the rest of the transformed table
--- before we sort by difference we sort by name (alphabetical) to get the correct order
 get_steps_diff_table :: Table -> Table
-get_steps_diff_table m = ["Name","Average first 4h","Average last 4h","Difference"] : get_steps_diff_table_aux (get_sorted_diff_table (sort (tail m)))
+get_steps_diff_table m = ["Name","Average first 4h","Average last 4h","Difference"] : get_steps_diff_table_aux (get_sorted_diff_table (tail m))
 
 
 -- Task 7
