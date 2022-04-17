@@ -1,4 +1,4 @@
-Email,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday
+Email,TotalMinutesAsleep1,TotalMinutesAsleep2,TotalMinutesAsleep3,TotalMinutesAsleep4,TotalMinutesAsleep5,TotalMinutesAsleep6,TotalMinutesAsleep7
 Mason.Zoe@stud.cs.pub.ro,327,384,412,340,700,304,360
 Ian.Brooklyn@stud.cs.pub.ro,119,124,796,137,0,0,0
 Lucy.Dylan@stud.cs.pub.ro,644,722,590,0,0,0,0
@@ -24,7 +24,7 @@ Logan.Evelyn@stud.cs.pub.ro,486,331,74,0,0,0,0
 Ezra.Paisley@stud.cs.pub.ro,338,447,424,513,611,525,398
 Ella.Alexander@stud.cs.pub.ro,458,531,486,363,528,391,339
 Luca.Lily@stud.cs.pub.ro,722,486,475,700,332,468,488
-Adam.Callie@stud.cs.pub.ro,420,291,447,428,441,486,439
+,420,291,447,428,441,486,439
 Audrey.Cooper@stud.cs.pub.ro,369,379,556,425,503,472,474
 Thomas.Stella@stud.cs.pub.ro,465,531,370,488,523,354,506
 Aaron.Naomi@stud.cs.pub.ro,360,405,433,411,377,437,467
@@ -32,7 +32,7 @@ Grace.Eli@stud.cs.pub.ro,322,219,355,533,573,398,484
 Elena.Lincoln@stud.cs.pub.ro,631,503,347,354,360,343,399
 Josiah.Adalyn@stud.cs.pub.ro,412,137,472,427,430,602,338
 Hailey.Elias@stud.cs.pub.ro,327,527,400,472,340,374,507
-Adeline.Theo@stud.cs.pub.ro,442,106,250,293,398,404,471
+,442,106,250,293,398,404,471
 Eva.Santiago@stud.cs.pub.ro,355,471,485,398,508,474,417
 Luna.Michael@stud.cs.pub.ro,363,421,171,354,364,355,126
 Asher.Maya@stud.cs.pub.ro,285,421,296,442,492,412,394
@@ -49,10 +49,10 @@ Ryan.Nora@stud.cs.pub.ro,465,245,483,451,414,404,524
 Melanie.Jameson@stud.cs.pub.ro,478,443,523,423,400,543,366
 Xavier.Isabelle@stud.cs.pub.ro,412,123,436,457,405,338,337
 William.Madison@stud.cs.pub.ro,354,465,414,405,441,492,449
-Adrian.Eleanor@stud.cs.pub.ro,411,543,421,277,384,74,342
+,411,543,421,277,384,74,342
 Noah.Olivia@stud.cs.pub.ro,379,392,552,436,339,331,631
 Aurora.Luke@stud.cs.pub.ro,337,492,465,421,465,450,293
-Ariana.Colton@stud.cs.pub.ro,520,503,492,469,286,329,622
+,520,503,492,469,286,329,622
 Emery.David@stud.cs.pub.ro,465,381,523,525,412,457,422
 Lila.Matthew@stud.cs.pub.ro,235,304,171,394,428,357,357
 Jackson.Riley@stud.cs.pub.ro,353,433,465,420,503,401,354
@@ -72,7 +72,7 @@ Gabriella.Dominic@stud.cs.pub.ro,460,443,59,325,681,455,527
 Anthony.Raelynn@stud.cs.pub.ro,347,478,341,469,504,505,472
 Makayla.Jonathan@stud.cs.pub.ro,354,412,323,471,451,463,171
 Sebastian.Mila@stud.cs.pub.ro,506,531,237,573,388,384,451
-Brooklyn.Ian@stud.cs.pub.ro,126,59,480,428,433,436,486
+,126,59,480,428,433,436,486
 Nathan.Elizabeth@stud.cs.pub.ro,390,402,450,414,485,250,458
 Alaina.Zion@stud.cs.pub.ro,499,388,115,469,327,502,441
 Naomi.Aaron@stud.cs.pub.ro,235,435,527,475,293,123,508
@@ -83,7 +83,7 @@ Samuel.Sarah@stud.cs.pub.ro,412,531,515,533,516,529,439
 Connor.Victoria@stud.cs.pub.ro,370,253,436,502,219,452,398
 Landon.Skyler@stud.cs.pub.ro,274,424,428,262,507,446,508
 Aubrey.Owen@stud.cs.pub.ro,384,490,409,520,535,310,415
-Camilla.Carter@stud.cs.pub.ro,459,442,750,369,477,368,436
+,459,442,750,369,477,368,436
 Anna.Hudson@stud.cs.pub.ro,611,230,405,440,426,492,439
 Aria.Lucas@stud.cs.pub.ro,62,483,530,590,478,439,441
 Maria.Axel@stud.cs.pub.ro,382,429,349,331,433,531,496
@@ -92,7 +92,7 @@ Nevaeh.Jordyn@stud.cs.pub.ro,366,312,424,115,508,547,506
 Sarah.Samuel@stud.cs.pub.ro,273,381,259,520,384,438,471
 Ellie.Julian@stud.cs.pub.ro,474,427,404,527,416,522,538
 Christian.Lelani@stud.cs.pub.ro,400,513,433,454,525,461,750
-Carson.Hannah@stud.cs.pub.ro,377,722,333,421,388,429,237
+,377,722,333,421,388,429,237
 Isaiah.Madelyn@stud.cs.pub.ro,503,331,467,414,531,568,259
 Eliana.Ethan@stud.cs.pub.ro,442,354,235,286,421,261,152
 Matthew.Lila@stud.cs.pub.ro,412,293,400,235,750,594,466
@@ -119,7 +119,7 @@ Daniel.Chloe@stud.cs.pub.ro,370,277,511,497,424,404,467
 Evelyn.Logan@stud.cs.pub.ro,513,363,431,446,350,523,522
 Riley.Jackson@stud.cs.pub.ro,421,523,441,230,286,523,388
 Benjamin.Avery@stud.cs.pub.ro,465,381,450,405,59,341,644
-Claire.Evan@stud.cs.pub.ro,527,357,545,485,59,332,549
+,527,357,545,485,59,332,549
 Colton.Ariana@stud.cs.pub.ro,440,498,525,370,451,322,340
 Caden.Amelia@stud.cs.pub.ro,477,322,421,630,467,79,498
 Callie.Adam@stud.cs.pub.ro,442,357,451,503,477,525,775

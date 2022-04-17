@@ -3,6 +3,7 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use camelCase" #-}
 
 
 -- ==================================================
@@ -11,14 +12,16 @@ module Tasks where
 
 import Dataset
 import Data.List
+import Data.Maybe (fromJust)
 import Text.Printf
-import Data.Array ()
-import Text.Read (Lexeme(String))
+import Data.Array (Ix (index))
+import Text.Read (Lexeme(String), readMaybe)
 
 type CSV = String
 type Value = String
 type Row = [Value]
 type Table = [Row]
+type ColumnName = String
 
 
 -- Prerequisities
@@ -234,3 +237,124 @@ rmap f s m =  s : tail (map f m)
 -- add the name then calculate the sum with a fold and transform the output to a string with specified format
 get_sleep_total :: Row -> Row
 get_sleep_total r = [head r, printf "%.02f" (foldr (\el acc -> (read el :: Float) + acc) 0.0 (tail r))]
+
+{-
+    TASK SET 2
+-}
+
+-- Task 1
+
+-- get the index of the column with the given name
+get_column :: ColumnName -> Row -> Maybe Int
+get_column = elemIndex
+
+-- get the element in the correct row to be compared (it returns a string)
+extract_el :: Row -> Maybe Int -> Value
+extract_el row Nothing = ""
+extract_el row (Just x) = row !! x
+
+-- when we know we can extract a float from the cell specified
+get_float_value :: Row -> Maybe Int -> Float
+get_float_value row relevantCol = read (extract_el row relevantCol) :: Float
+
+-- first of all tries to convert a value from the column to a float
+-- if it succedes then compare as floats, otherwise compare as string with compare
+tsort :: ColumnName -> Table -> Table
+tsort column table = head table : mySort (readMaybe (extract_el (table !! 1) (get_column column (head table))) :: Maybe Float) where
+    mySort Nothing = sortBy my_comp1 (tail table) where
+        my_comp1 row1 row2 = compare (extract_el row1 relevantCol) (extract_el row2 relevantCol) where
+                relevantCol = get_column column (head table)
+    mySort (Just x) = sortBy my_comp2 (tail table) where
+         my_comp2 row1 row2
+            | get_float_value row1 relevantCol > get_float_value row2 relevantCol = GT
+            | get_float_value row1 relevantCol == get_float_value row2 relevantCol = compare (head row1) (head row2)
+            | otherwise = LT where
+                relevantCol = get_column column (head table)
+
+-- Task 2
+
+-- verify if the headers are the same
+check :: Row -> Row ->Bool
+check r1 r2 = length r1 == length r2 && checkEQ where
+    checkEQ = and (zipWith (==) r1 r2)
+
+-- if the headers are the same then concat, otherwise just return the first table
+vunion :: Table -> Table -> Table
+vunion t1 t2 = if check (head t1) (head t2) then t1 ++ tail t2 else t1
+
+-- Task 3
+-- gets a row with as many empty strings as the number of columns
+num_empty :: Row -> Row
+num_empty = map (const "")
+
+-- zip together the rows of the first table with the rows of the second one
+-- haskell is "clever" enough to pad only when needed when using the infinite
+-- function repeat
+hunion :: Table -> Table -> Table
+hunion t1 t2 = zipWith (++) t1 (t2 ++ repeat (num_empty (head t2)))
+
+-- Task 4
+
+unify :: Row -> Row -> Row
+unify r1 r2 = nub (r1 ++ r2)
+
+
+{-
+- unite the two headers into one with no duplicates using unify
+- use a map to go through every row of table 1 and apply the function -> map_function
+- map_function looks at the row and tries to find using the key (from key_column) the
+- correspondent row in table 2 with the function find_by_key.
+- if it doesn't find a correspondent then it puts an empty list [] in place of that row
+- otherwise it appends the two rows together and delete the duplicate columns using delete_duplicate
+- Last of all, we apply a filter to the final table in order to remove the empty lists that we left there
+-}
+tjoin :: ColumnName -> Table -> Table -> Table
+tjoin key_column t1 t2 = unify (head t1) (head t2) :
+    filter (not . null) (map map_function (tail t1)) where
+        first_index = head (extract_list_of_indices [key_column] (head t1 ++ head t2) 0)
+        last_index = last (extract_list_of_indices [key_column] (head t1 ++ head t2) 0)
+        index_in_t2 c_key = findIndex (\row -> head row == c_key) t2
+        find_by_key Nothing = []
+        find_by_key (Just index) = t2 !! index
+        map_function row = if null (find_by_key (index_in_t2 (row !! first_index)))
+             then [] else delete_duplicate (row ++ find_by_key (index_in_t2 (row !! first_index)))
+        delete_duplicate row = take last_index row ++ drop (last_index+1) row
+
+-- Task 5
+
+-- add the new header column afterwards use list comprehension to get
+-- every row from t1 with every row from 2 and apply the function to the two rows
+cartesian :: (Row -> Row -> Row) -> [ColumnName] -> Table -> Table -> Table
+cartesian new_row_function new_column_names t1 t2 = new_column_names : [new_row_function row1 row2 | row1 <- tail t1, row2 <- tail t2 ]
+
+-- Task 6
+
+-- get a list of indexes for the columns that are specified
+extract_list_of_indices :: [ColumnName] -> Row -> Int -> [Int]
+extract_list_of_indices columns_to_extract [] _ = []
+extract_list_of_indices columns_to_extract (x:xs) cnt = if x `elem` columns_to_extract then
+    cnt : extract_list_of_indices columns_to_extract xs (cnt+1) else extract_list_of_indices columns_to_extract xs (cnt+1)
+
+-- for each row in the table extract the info only at the indexes obtained
+-- with the function from above
+-- written also with list comprehension -> for every row create a new list
+-- with the elements in the columns specified by indexes
+projection :: [ColumnName] -> Table -> Table
+projection columns_to_extract t = map (\row -> [row !! index | index <- indexes]) t where
+    indexes = extract_list_of_indices columns_to_extract (head t ) 0
+
+-- Task 7
+
+{-
+- Put the header
+- Use the filter function which uses the condition on the extracted value to compare from each row
+- get_relevant_value gets the correct value from the row like this row[index]
+- where index is obtained by calling the function made previously `extract_list_of_indexe`
+- with the key_column used as a list -> and we use head on the result as we know it will only return
+- a single index
+-}
+filterTable :: (Value -> Bool) -> ColumnName -> Table -> Table
+filterTable condition key_column t = head t : filter (condition . get_relevant_value key_column) (tail t) where
+    get_relevant_value key_column row = row !! head (extract_list_of_indices [key_column] (head t) 0)
+
+
