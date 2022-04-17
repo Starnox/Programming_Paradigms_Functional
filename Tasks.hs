@@ -307,6 +307,8 @@ unify r1 r2 = nub (r1 ++ r2)
 - if it doesn't find a correspondent then it puts an empty list [] in place of that row
 - otherwise it appends the two rows together and delete the duplicate columns using delete_duplicate
 - Last of all, we apply a filter to the final table in order to remove the empty lists that we left there
+- first index is the index of the key column from the first table
+- last index is the index of the key column from the second table
 -}
 tjoin :: ColumnName -> Table -> Table -> Table
 tjoin key_column t1 t2 = unify (head t1) (head t2) :
@@ -325,7 +327,8 @@ tjoin key_column t1 t2 = unify (head t1) (head t2) :
 -- add the new header column afterwards use list comprehension to get
 -- every row from t1 with every row from 2 and apply the function to the two rows
 cartesian :: (Row -> Row -> Row) -> [ColumnName] -> Table -> Table -> Table
-cartesian new_row_function new_column_names t1 t2 = new_column_names : [new_row_function row1 row2 | row1 <- tail t1, row2 <- tail t2 ]
+cartesian new_row_function new_column_names t1 t2 =
+    new_column_names : [new_row_function row1 row2 | row1 <- tail t1, row2 <- tail t2 ]
 
 -- Task 6
 

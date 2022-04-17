@@ -10,3 +10,6 @@ and more technical notes can be found in the code
 
 ## Part 1
 CSV files parsing, handling and transformations
+
+## Part 2
+Continuation of the first part. Implementation details can be found in the code
