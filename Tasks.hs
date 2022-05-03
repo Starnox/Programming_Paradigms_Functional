@@ -5,7 +5,6 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use camelCase" #-}
 
-
 -- ==================================================
 
 module Tasks where
@@ -16,6 +15,8 @@ import Data.Maybe (fromJust)
 import Text.Printf
 import Data.Array (Ix (index))
 import Text.Read (Lexeme(String), readMaybe)
+
+import Common
 
 type CSV = String
 type Value = String
@@ -361,3 +362,108 @@ filterTable condition key_column t = head t : filter (condition . get_relevant_v
     get_relevant_value key_column row = row !! head (extract_list_of_indices [key_column] (head t) 0)
 
 
+{-
+    TASK SET 3
+-}
+
+
+-- 3.1
+
+data Query =
+    FromTable Table
+    | AsList String Query
+    | Sort String Query
+    | ValueMap (Value -> Value) Query
+    | RowMap (Row -> Row) [String] Query
+    | VUnion Query Query
+    | HUnion Query Query
+    | TableJoin String Query Query
+    | Cartesian (Row -> Row -> Row) [String] Query Query
+    | Projection [String] Query
+    | forall a. FEval a => Filter (FilterCondition a) Query -- 3.4
+    | Graph EdgeOp Query -- 3.5
+
+
+instance Show QResult where
+    show (List l) = show l
+    show (Table t) = show t
+
+class Eval a where
+    eval :: a -> QResult
+
+evalFromTable :: Table -> QResult
+evalFromTable = Table
+
+evalAsList :: String -> Table -> QResult
+evalAsList str table = List (tail $ head ( filter (\row -> head row == str) (transpose_matrix table)))
+
+instance Eval Query where
+    eval (FromTable table) = evalFromTable table
+
+    eval (AsList str (FromTable table)) = evalAsList str table
+    eval (AsList str _ ) = List [] 
+
+    eval (Sort str (FromTable table)) = undefined
+    eval (Sort str _ ) = List [] 
+
+    eval (ValueMap func (FromTable table)) = undefined
+    eval (ValueMap func _) = List []
+
+    eval (RowMap func cols (FromTable table)) = undefined
+    eval (RowMap func cols _ ) = List []
+
+    eval (VUnion (FromTable table1) (FromTable table2)) = undefined
+    eval (VUnion _ _) = List [] 
+
+    eval (HUnion (FromTable table1) (FromTable table2)) = undefined
+    eval (HUnion _ _) = List []
+
+    eval (TableJoin str (FromTable table1) (FromTable table2)) = undefined
+    eval (TableJoin str _ _) = List []
+
+    eval (Cartesian op cols (FromTable table1) (FromTable table2)) = undefined
+    eval (Cartesian op cols _ _) = List []
+
+    eval (Projection cols (FromTable table)) = undefined
+    eval (Projection cols _) = undefined
+
+    eval (Filter cond (FromTable table)) = undefined
+    eval (Filter cond _) = List []
+
+    eval (Graph edgeop (FromTable table)) = undefined
+    eval (Graph edgeop _) = List []
+
+-- 3.2 & 3.3
+
+type FilterOp = Row -> Bool
+
+data FilterCondition a =
+    Eq String a |
+    Lt String a |
+    Gt String a |
+    In String [a] |
+    FNot (FilterCondition a) |
+    FieldEq String String
+
+class FEval a where
+    feval :: [String] -> (FilterCondition a) -> FilterOp
+
+instance FEval Float where
+    feval header (Eq str val) = undefined
+
+instance FEval String where
+    feval header (Eq str val) = undefined
+
+
+-- 3.4
+
+-- where EdgeOp is defined:
+type EdgeOp = Row -> Row -> Maybe Value
+
+-- 3.5
+similarities_query :: Query
+similarities_query = undefined
+
+-- 3.6 (Typos)
+correct_table :: String -> Table -> Table -> Table
+correct_table col csv1 csv2 = undefined

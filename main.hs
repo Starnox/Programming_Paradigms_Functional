@@ -73,6 +73,55 @@ task2_7 = ("Task 2.7", [
         expect (filterTable ((>10000).read) "TotalSteps" D.physical_activity) toBe R.task2_7
     ])
 
+test_schema2 = ["Name1", "Name2"]
+names_only = (\row1 row2 -> [head row1, head row2])
+
+
+task3_1 = ("Task 3.1", [
+        expect (eval $ AsList "Name" $ FromTable D.physical_activity) toBe R.task3_1_1
+        {-
+        expect (eval $ Sort "TotalSteps" $ FromTable D.physical_activity) toBe R.task3_1_2,
+        expect (eval $ ValueMap (\x -> if x == "" then "0" else x) $ FromTable D.sleep_min) toBe R.task3_1_3,
+        expect (eval $ RowMap get_sleep_total ["Name", "TotalSteps"] $ FromTable D.physical_activity) toBe R.task3_1_4,
+        expect (eval $ VUnion (FromTable D.physical_activity) (FromTable D.physical_activity)) toBe R.task3_1_5,
+        expect (eval $ HUnion (FromTable D.physical_activity) (FromTable D.sleep_min)) toBe R.task3_1_6,
+        expect (eval $ TableJoin "Name" (FromTable D.physical_activity) (FromTable D.eight_hours)) toBe R.task3_1_7,
+        expect (eval $ Cartesian names_only test_schema2 (FromTable D.physical_activity) (FromTable D.sleep_min)) toBe R.task3_1_8,
+        expect (eval $ Projection ["Name", "TotalSteps"] $ FromTable D.physical_activity) toBe R.task3_1_9
+        -}
+    ])
+
+task3_2 = ("Task 3.2", [
+        expect (eval $ Filter (Gt "TotalMinutesAsleep1" (read "119" :: Float)) (FromTable D.sleep_min)) toBe R.task3_3_1,
+        expect (eval $ Filter (Eq "Name" "Lily Luca") (FromTable D.physical_activity)) toBe R.task3_3_2,
+        expect (eval $ Filter (Lt "Name" "Brian") (FromTable D.physical_activity)) toBe R.task3_3_3,
+        expect (eval $ Filter (In "TotalMinutesAsleep4" [(read "515" :: Float), (read "99" :: Float)]) (FromTable D.sleep_min)) toBe R.task3_3_4,
+        expect (eval $ Filter (FNot $ Eq "TotalDistance" "6.81") (FromTable D.physical_activity)) toBe R.task3_3_5,
+        expect (eval $ Filter ((FieldEq "TotalMinutesAsleep3" "TotalMinutesAsleep2")::(FilterCondition String)) (FromTable D.sleep_min)) toBe R.task3_3_6
+    ])
+
+edge_op1 (n1:l1:_) (n2:l2:_)
+            | l1 == l2 = Just l1
+            | otherwise = Nothing
+
+edge_op2 l1 l2
+    | last l1 == last l2 = Just "identical"
+    | (abs $ (read (last l1) :: Float) - (read (last l1) :: Float)) < 50 = Just "similar"
+    | otherwise = Nothing
+
+task3_4 = ("Task 3.4", [
+        expect (eval $ Graph edge_op1 (FromTable D.physical_activity)) toBe R.task3_4_1,
+        expect (eval $ Graph edge_op2 (FromTable D.sleep_min)) toBe R.task3_4_2
+    ])
+
+task3_5 = ("Task 3.5", [
+        expect (eval $ similarities_query) toBe R.task3_5
+    ])
+
+task3_6 = ("Task 3.1", [
+        expect (correct_table "Name" D.emails D.physical_activity) toBe R.task3_6
+    ])
+
 taskSets2 = M.fromList [
         ("1.1", task1_1),
         ("1.2", task1_2),
@@ -89,12 +138,14 @@ taskSets2 = M.fromList [
         ("2.4", task2_4),
         ("2.5", task2_5),
         ("2.6", task2_6),
-        ("2.7", task2_7)
-    ]
-
-taskSets = [
-        task1_1, task1_2, task1_3, task1_4, task1_5, task1_6, task1_7, task1_8,
-        task2_1, task2_2, task2_3, task2_4, task2_5, task2_6, task2_7
+        ("2.7", task2_7),
+        
+        ("3.1", task3_1),
+        ("3.2", task3_2),
+        ("3.4", task3_4),
+        ("3.5", task3_5),
+        ("3.6", task3_6)
+        
     ]
 
 main :: IO ()
