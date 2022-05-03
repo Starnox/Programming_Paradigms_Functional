@@ -394,43 +394,85 @@ class Eval a where
 evalFromTable :: Table -> QResult
 evalFromTable = Table
 
+-- transpose the matrix, get the corresponding row using a combination of filter and head
+-- then apply tail on the result
 evalAsList :: String -> Table -> QResult
 evalAsList str table = List (tail $ head ( filter (\row -> head row == str) (transpose_matrix table)))
 
+-- use the sort function defined in part 2
+evalSort :: String -> Table -> QResult
+evalSort col table = Table (tsort col table)
+
+-- use the vmap function defined in part 1
+evalValueMap :: (Value -> Value) -> Table -> QResult
+evalValueMap func table = Table (vmap func table)
+
+-- use the rmap function defined in part 1
+evalRowMap :: (Row -> Row) -> [String] -> Table -> QResult
+evalRowMap func hdr table = Table (rmap func hdr table)
+
+-- use the vunion function defined in part 2
+evalVUnion :: Table -> Table -> QResult
+evalVUnion t1 t2 = Table (vunion t1 t2)
+
+-- use the hunion function defined in part 2
+evalHUnion :: Table -> Table -> QResult
+evalHUnion t1 t2 = Table (hunion t1 t2)
+
+-- use the tjoin function defined in part 2
+evalTableJoin :: String -> Table -> Table -> QResult
+evalTableJoin col t1 t2 = Table (tjoin col t1 t2)
+
+-- use the cartesian function defined in part 2
+evalCartesian :: (Row -> Row -> Row) -> [String] -> Table -> Table -> QResult
+evalCartesian func hdr t1 t2 = Table (cartesian func hdr t1 t2)
+
+-- use the projection function defined in part 2
+evalProjection :: [String] -> Table -> QResult
+evalProjection cols table = Table (projection cols table)
+
+-- apply the filter obtained from feval to the table
+evalFilter :: FEval a => (FilterCondition a) -> Table -> QResult
+evalFilter cond table = Table (head table : filter filter_function (tail table)) where
+    filter_function = feval (head table) cond
+
+-- enroll Query in Eval class
+-- Each query except FromTable expects to recieve another table 
+-- and if it doesn't it returns an empty list
 instance Eval Query where
     eval (FromTable table) = evalFromTable table
 
     eval (AsList str (FromTable table)) = evalAsList str table
-    eval (AsList str _ ) = List [] 
+    eval (AsList str _ ) = List []
 
-    eval (Sort str (FromTable table)) = undefined
-    eval (Sort str _ ) = List [] 
+    eval (Sort str (FromTable table)) = evalSort str table
+    eval (Sort str _ ) = List []
 
-    eval (ValueMap func (FromTable table)) = undefined
+    eval (ValueMap func (FromTable table)) = evalValueMap func table
     eval (ValueMap func _) = List []
 
-    eval (RowMap func cols (FromTable table)) = undefined
+    eval (RowMap func cols (FromTable table)) = evalRowMap func cols table
     eval (RowMap func cols _ ) = List []
 
-    eval (VUnion (FromTable table1) (FromTable table2)) = undefined
-    eval (VUnion _ _) = List [] 
+    eval (VUnion (FromTable table1) (FromTable table2)) = evalVUnion table1 table2
+    eval (VUnion _ _) = List []
 
-    eval (HUnion (FromTable table1) (FromTable table2)) = undefined
+    eval (HUnion (FromTable table1) (FromTable table2)) = evalHUnion table1 table2
     eval (HUnion _ _) = List []
 
-    eval (TableJoin str (FromTable table1) (FromTable table2)) = undefined
+    eval (TableJoin str (FromTable table1) (FromTable table2)) = evalTableJoin str table1 table2
     eval (TableJoin str _ _) = List []
 
-    eval (Cartesian op cols (FromTable table1) (FromTable table2)) = undefined
+    eval (Cartesian op cols (FromTable table1) (FromTable table2)) = evalCartesian op cols table1 table2
     eval (Cartesian op cols _ _) = List []
 
-    eval (Projection cols (FromTable table)) = undefined
+    eval (Projection cols (FromTable table)) = evalProjection cols table
     eval (Projection cols _) = undefined
 
-    eval (Filter cond (FromTable table)) = undefined
+    eval (Filter cond (FromTable table)) = evalFilter cond table
     eval (Filter cond _) = List []
 
-    eval (Graph edgeop (FromTable table)) = undefined
+    eval (Graph edgeop (FromTable table)) = List []
     eval (Graph edgeop _) = List []
 
 -- 3.2 & 3.3
@@ -448,11 +490,69 @@ data FilterCondition a =
 class FEval a where
     feval :: [String] -> (FilterCondition a) -> FilterOp
 
+-- extract the element in the correct position from the row 
+-- and create a delta function that verify if it is equal to val
+fevalEqFloat :: [String] -> String -> Float -> FilterOp
+fevalEqFloat header str val = \row -> read (extract_el row index) == val where
+        index = get_column str header
+
+fevalEqString :: [String] -> String -> String -> FilterOp
+fevalEqString header str val = \row -> extract_el row index == val where
+        index = get_column str header
+
+fevalGtFloat :: [String] -> String -> Float -> FilterOp
+fevalGtFloat header str val = \row -> read (extract_el row index) > val where
+        index = get_column str header
+
+fevalGtString :: [String] -> String -> String -> FilterOp
+fevalGtString header str val = \row -> extract_el row index > val where
+        index = get_column str header
+
+fevalLtFloat :: [String] -> String -> Float -> FilterOp
+fevalLtFloat header str val = \row -> read (extract_el row index) < val where
+        index = get_column str header
+
+fevalLtString :: [String] -> String -> String -> FilterOp
+fevalLtString header str val = \row -> extract_el row index < val where
+        index = get_column str header
+
+fevalInFloat :: [String] -> String -> [Float] -> FilterOp
+fevalInFloat header str lst = \row -> read (extract_el row index) `elem` lst where
+        index = get_column str header
+
+fevalInString :: [String] -> String -> [String] -> FilterOp
+fevalInString header str lst = \row -> extract_el row index `elem` lst where
+        index = get_column str header
+
+fevalFNot :: FEval a => [String] -> FilterCondition a -> FilterOp
+fevalFNot header condition = not . initial where
+    initial = feval header condition
+
+fevalFieldEqFloat :: [String] -> String -> String -> FilterOp
+fevalFieldEqFloat header s1 s2 = \row -> (read (extract_el row index1) :: Float) == read (extract_el row index2) where
+        index1 = get_column s1 header
+        index2 = get_column s2 header
+
+fevalFieldEqString :: [String] -> String -> String -> FilterOp
+fevalFieldEqString header s1 s2 = \row -> extract_el row index1 == extract_el row index2 where
+        index1 = get_column s1 header
+        index2 = get_column s2 header
+
 instance FEval Float where
-    feval header (Eq str val) = undefined
+    feval header (Eq str val) = fevalEqFloat header str val
+    feval header (Lt str val) = fevalLtFloat header str val
+    feval header (Gt str val) = fevalGtFloat header str val
+    feval header (In str xs) = fevalInFloat header str xs
+    feval header (FNot condition) = fevalFNot header condition
+    feval header (FieldEq s1 s2) = fevalFieldEqFloat header s1 s2
 
 instance FEval String where
-    feval header (Eq str val) = undefined
+    feval header (Eq str val) = fevalEqString header str val
+    feval header (Lt str val) = fevalLtString header str val
+    feval header (Gt str val) = fevalGtString header str val
+    feval header (In str xs) = fevalInString header str xs
+    feval header (FNot condition) = fevalFNot header condition
+    feval header (FieldEq s1 s2) = fevalFieldEqString header s1 s2
 
 
 -- 3.4
@@ -462,8 +562,8 @@ type EdgeOp = Row -> Row -> Maybe Value
 
 -- 3.5
 similarities_query :: Query
-similarities_query = undefined
+similarities_query = FromTable []
 
 -- 3.6 (Typos)
 correct_table :: String -> Table -> Table -> Table
-correct_table col csv1 csv2 = undefined
+correct_table col csv1 csv2 = [[]]

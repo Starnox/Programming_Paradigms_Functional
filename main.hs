@@ -78,8 +78,7 @@ names_only = (\row1 row2 -> [head row1, head row2])
 
 
 task3_1 = ("Task 3.1", [
-        expect (eval $ AsList "Name" $ FromTable D.physical_activity) toBe R.task3_1_1
-        {-
+        expect (eval $ AsList "Name" $ FromTable D.physical_activity) toBe R.task3_1_1,
         expect (eval $ Sort "TotalSteps" $ FromTable D.physical_activity) toBe R.task3_1_2,
         expect (eval $ ValueMap (\x -> if x == "" then "0" else x) $ FromTable D.sleep_min) toBe R.task3_1_3,
         expect (eval $ RowMap get_sleep_total ["Name", "TotalSteps"] $ FromTable D.physical_activity) toBe R.task3_1_4,
@@ -88,7 +87,6 @@ task3_1 = ("Task 3.1", [
         expect (eval $ TableJoin "Name" (FromTable D.physical_activity) (FromTable D.eight_hours)) toBe R.task3_1_7,
         expect (eval $ Cartesian names_only test_schema2 (FromTable D.physical_activity) (FromTable D.sleep_min)) toBe R.task3_1_8,
         expect (eval $ Projection ["Name", "TotalSteps"] $ FromTable D.physical_activity) toBe R.task3_1_9
-        -}
     ])
 
 task3_2 = ("Task 3.2", [
@@ -141,10 +139,12 @@ taskSets2 = M.fromList [
         ("2.7", task2_7),
         
         ("3.1", task3_1),
-        ("3.2", task3_2),
+        ("3.2", task3_2)
+        {-
         ("3.4", task3_4),
         ("3.5", task3_5),
         ("3.6", task3_6)
+        -}
         
     ]
 
