@@ -636,3 +636,9 @@ sleep_min = [["Email","TotalMinutesAsleep1","TotalMinutesAsleep2","TotalMinutesA
     ["Amaya.Hunter@stud.cs.pub.ro","250","430","523","508","439","399","542"],
     ["Chloe.Daniel@stud.cs.pub.ro","327","525","245","398","291","499","590"],
     ["Mia.Mateo@stud.cs.pub.ro","465","555","722","368","237","465","423"]]
+
+test = [["Name", "HoursSlept", "Category"],
+        ["Mihai", "9", "321"],
+        ["Andrei", "8", "322"],
+        ["Stefan", "10", "321"],
+        ["Ana", "9", "322"]]

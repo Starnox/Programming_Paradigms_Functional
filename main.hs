@@ -107,6 +107,14 @@ edge_op2 l1 l2
     | (abs $ (read (last l1) :: Float) - (read (last l1) :: Float)) < 50 = Just "similar"
     | otherwise = Nothing
 
+edge_op3 [_,_,z] [_,_,c]
+   | z == c = Just c
+   | otherwise = Nothing
+
+edge_op4 [_,x,_] [_,y,_]
+   | (abs $ (read x :: Int) - (read y :: Int)) <= 1 = Just "similar"
+   | otherwise = Nothing
+
 task3_4 = ("Task 3.4", [
         expect (eval $ Graph edge_op1 (FromTable D.physical_activity)) toBe R.task3_4_1,
         expect (eval $ Graph edge_op2 (FromTable D.sleep_min)) toBe R.task3_4_2
@@ -139,12 +147,10 @@ taskSets2 = M.fromList [
         ("2.7", task2_7),
         
         ("3.1", task3_1),
-        ("3.2", task3_2)
-        {-
+        ("3.2", task3_2),
         ("3.4", task3_4),
         ("3.5", task3_5),
         ("3.6", task3_6)
-        -}
         
     ]
 

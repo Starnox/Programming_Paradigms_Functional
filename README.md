@@ -13,3 +13,7 @@ CSV files parsing, handling and transformations
 
 ## Part 2
 Continuation of the first part. Implementation details can be found in the code
+
+## Part 3
+Combine the first two parts and create a query language that makes our function
+more accessible

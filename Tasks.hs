@@ -11,12 +11,13 @@ module Tasks where
 
 import Dataset
 import Data.List
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, isNothing)
 import Text.Printf
 import Data.Array (Ix (index))
 import Text.Read (Lexeme(String), readMaybe)
 
 import Common
+import qualified Dataset as D
 
 type CSV = String
 type Value = String
@@ -432,9 +433,27 @@ evalProjection :: [String] -> Table -> QResult
 evalProjection cols table = Table (projection cols table)
 
 -- apply the filter obtained from feval to the table
-evalFilter :: FEval a => (FilterCondition a) -> Table -> QResult
+evalFilter :: FEval a => FilterCondition a -> Table -> QResult
 evalFilter cond table = Table (head table : filter filter_function (tail table)) where
     filter_function = feval (head table) cond
+
+-- where EdgeOp is defined:
+type EdgeOp = Row -> Row -> Maybe Value
+
+-- 3.4 implement eval for graph queries
+
+getRowForGraph :: EdgeOp -> Row -> Row -> Row
+getRowForGraph edgeop row1 row2 = if isNothing value then [] else finalRow where
+    value = edgeop row1 row2
+    finalRow = if head row1 < head row2 then [head row1, head row2, fromJust value] else [head row2, head row1, fromJust value]
+    
+
+createGroups :: EdgeOp -> Table -> Table
+createGroups _ [] = []
+createGroups edgeop (row1:xs) = map (getRowForGraph edgeop row1) xs ++ createGroups edgeop xs
+
+evalGraph :: EdgeOp -> Table -> QResult
+evalGraph edgeop table = Table (["From", "To", "Value"] : filter (not . null) (createGroups edgeop (tail table)))
 
 -- enroll Query in Eval class
 -- Each query except FromTable expects to recieve another table 
@@ -472,7 +491,7 @@ instance Eval Query where
     eval (Filter cond (FromTable table)) = evalFilter cond table
     eval (Filter cond _) = List []
 
-    eval (Graph edgeop (FromTable table)) = List []
+    eval (Graph edgeop (FromTable table)) = evalGraph edgeop table
     eval (Graph edgeop _) = List []
 
 -- 3.2 & 3.3
@@ -554,15 +573,20 @@ instance FEval String where
     feval header (FNot condition) = fevalFNot header condition
     feval header (FieldEq s1 s2) = fevalFieldEqString header s1 s2
 
+-- edge_op3 [_,_,z] [_,_,c]
+--    | z == c = Just c
+--    | otherwise = Nothing
 
--- 3.4
-
--- where EdgeOp is defined:
-type EdgeOp = Row -> Row -> Maybe Value
+-- TODO modify
+my_edge_op :: EdgeOp
+my_edge_op (e1:a1:a2:a3:a4:a5:a6:a7:_) (e2:b1:b2:b3:b4:b5:b6:b7:_)
+    | e1 /= e2 = Just (fromEnum (a1 == b1) + fromEnum  (a2 == b2) + fromEnum (a3 == b3)
+    + fromEnum (a4 == b4) + fromEnum (a5 == b5) + fromEnum (a6 == b6) + fromEnum (a7 == b7))
+    | otherwise = Nothing 
 
 -- 3.5
 similarities_query :: Query
-similarities_query = FromTable []
+similarities_query = Graph my_edge_op (FromTable D.sleep_min)
 
 -- 3.6 (Typos)
 correct_table :: String -> Table -> Table -> Table
