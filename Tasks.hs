@@ -446,7 +446,6 @@ getRowForGraph :: EdgeOp -> Row -> Row -> Row
 getRowForGraph edgeop row1 row2 = if isNothing value then [] else finalRow where
     value = edgeop row1 row2
     finalRow = if head row1 < head row2 then [head row1, head row2, fromJust value] else [head row2, head row1, fromJust value]
-    
 
 createGroups :: EdgeOp -> Table -> Table
 createGroups _ [] = []
@@ -458,41 +457,53 @@ evalGraph edgeop table = Table (["From", "To", "Value"] : filter (not . null) (c
 -- enroll Query in Eval class
 -- Each query except FromTable expects to recieve another table 
 -- and if it doesn't it returns an empty list
+transform :: QResult  -> Query
+transform (Table t) = FromTable t
+transform _ = FromTable []
+
+{-
+If it is a query on a table then execute that query
+Otherwise execute the rightmost query first then the current query
+-}
 instance Eval Query where
     eval (FromTable table) = evalFromTable table
 
     eval (AsList str (FromTable table)) = evalAsList str table
-    eval (AsList str _ ) = List []
+    eval (AsList str (AsList str2 q) ) = List []
+    eval (AsList str query) = eval (AsList str (transform (eval query))) 
 
     eval (Sort str (FromTable table)) = evalSort str table
-    eval (Sort str _ ) = List []
+    eval (Sort str (AsList str2 q) ) = List []
+    eval (Sort str query) = eval (Sort str (transform (eval query))) 
 
     eval (ValueMap func (FromTable table)) = evalValueMap func table
-    eval (ValueMap func _) = List []
+    eval (ValueMap func (AsList str2 q) ) = List []
+    eval (ValueMap func query) = eval (ValueMap func (transform (eval query))) 
 
     eval (RowMap func cols (FromTable table)) = evalRowMap func cols table
-    eval (RowMap func cols _ ) = List []
+    eval (RowMap func cols (AsList str2 q) ) = List []
+    eval (RowMap func cols query) = eval (RowMap func cols (transform (eval query))) 
 
     eval (VUnion (FromTable table1) (FromTable table2)) = evalVUnion table1 table2
-    eval (VUnion _ _) = List []
+    eval (VUnion q1 q2) = eval (VUnion (transform (eval q1))  (transform (eval q2)))
 
     eval (HUnion (FromTable table1) (FromTable table2)) = evalHUnion table1 table2
-    eval (HUnion _ _) = List []
+    eval (HUnion q1 q2) = eval (HUnion (transform (eval q1))  (transform (eval q2)))
 
     eval (TableJoin str (FromTable table1) (FromTable table2)) = evalTableJoin str table1 table2
-    eval (TableJoin str _ _) = List []
+    eval (TableJoin str q1 q2) = eval (TableJoin str (transform (eval q1))  (transform (eval q2)))
 
     eval (Cartesian op cols (FromTable table1) (FromTable table2)) = evalCartesian op cols table1 table2
-    eval (Cartesian op cols _ _) = List []
+    eval (Cartesian op cols q1 q2) = eval (Cartesian op cols (transform (eval q1))  (transform (eval q2)))
 
     eval (Projection cols (FromTable table)) = evalProjection cols table
-    eval (Projection cols _) = undefined
+    eval (Projection cols query) = eval (Projection cols (transform (eval query)))
 
     eval (Filter cond (FromTable table)) = evalFilter cond table
-    eval (Filter cond _) = List []
+    eval (Filter cond query) = eval (Filter cond (transform (eval query)))
 
     eval (Graph edgeop (FromTable table)) = evalGraph edgeop table
-    eval (Graph edgeop _) = List []
+    eval (Graph edgeop query) = eval(Graph edge_op (transform (eval query))) 
 
 -- 3.2 & 3.3
 
@@ -578,15 +589,28 @@ instance FEval String where
 --    | otherwise = Nothing
 
 -- TODO modify
-my_edge_op :: EdgeOp
-my_edge_op (e1:a1:a2:a3:a4:a5:a6:a7:_) (e2:b1:b2:b3:b4:b5:b6:b7:_)
-    | e1 /= e2 = Just (fromEnum (a1 == b1) + fromEnum  (a2 == b2) + fromEnum (a3 == b3)
-    + fromEnum (a4 == b4) + fromEnum (a5 == b5) + fromEnum (a6 == b6) + fromEnum (a7 == b7))
-    | otherwise = Nothing 
+-- my_edge_op :: EdgeOp
+-- my_edge_op (e1:a1:a2:a3:a4:a5:a6:a7:_) (e2:b1:b2:b3:b4:b5:b6:b7:_)
+--     | e1 /= e2 = Just (read (fromEnum (a1 == b1) + fromEnum  (a2 == b2) + fromEnum (a3 == b3)
+--     + fromEnum (a4 == b4) + fromEnum (a5 == b5) + fromEnum (a6 == b6) + fromEnum (a7 == b7)))
+--     | otherwise = Nothing 
 
+
+edge_op :: EdgeOp
+edge_op (e1:a1:a2:a3:a4:a5:a6:a7:a8) (e2:b1:b2:b3:b4:b5:b6:b7:b8)
+    | e1 /= e2 = Just (show (fromEnum  (a1 == b1) + fromEnum  (a2 == b2) + fromEnum (a3 == b3)
+        + fromEnum (a4 == b4) + fromEnum (a5 == b5) + fromEnum (a6 == b6) + fromEnum (a7 == b7)
+        + fromEnum (a8 == b8)) )
+    | otherwise = Nothing
+
+
+myFilter = Filter (Gt "Value" (read "4" :: Float))
+
+
+-- Sort "Value" $ myFilter $
 -- 3.5
 similarities_query :: Query
-similarities_query = Graph my_edge_op (FromTable D.sleep_min)
+similarities_query = Sort "Value" $ myFilter (Graph edge_op (FromTable D.eight_hours ))
 
 -- 3.6 (Typos)
 correct_table :: String -> Table -> Table -> Table
