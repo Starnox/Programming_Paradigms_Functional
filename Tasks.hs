@@ -13,7 +13,7 @@ import Dataset
 import Data.List
 import Data.Maybe (fromJust, isNothing)
 import Text.Printf
-import Data.Array (Ix (index))
+import Data.Array (Ix (index), array, (!), listArray)
 import Text.Read (Lexeme(String), readMaybe)
 
 import Common
@@ -470,19 +470,19 @@ instance Eval Query where
 
     eval (AsList str (FromTable table)) = evalAsList str table
     eval (AsList str (AsList str2 q) ) = List []
-    eval (AsList str query) = eval (AsList str (transform (eval query))) 
+    eval (AsList str query) = eval (AsList str (transform (eval query)))
 
     eval (Sort str (FromTable table)) = evalSort str table
     eval (Sort str (AsList str2 q) ) = List []
-    eval (Sort str query) = eval (Sort str (transform (eval query))) 
+    eval (Sort str query) = eval (Sort str (transform (eval query)))
 
     eval (ValueMap func (FromTable table)) = evalValueMap func table
     eval (ValueMap func (AsList str2 q) ) = List []
-    eval (ValueMap func query) = eval (ValueMap func (transform (eval query))) 
+    eval (ValueMap func query) = eval (ValueMap func (transform (eval query)))
 
     eval (RowMap func cols (FromTable table)) = evalRowMap func cols table
     eval (RowMap func cols (AsList str2 q) ) = List []
-    eval (RowMap func cols query) = eval (RowMap func cols (transform (eval query))) 
+    eval (RowMap func cols query) = eval (RowMap func cols (transform (eval query)))
 
     eval (VUnion (FromTable table1) (FromTable table2)) = evalVUnion table1 table2
     eval (VUnion q1 q2) = eval (VUnion (transform (eval q1))  (transform (eval q2)))
@@ -503,7 +503,7 @@ instance Eval Query where
     eval (Filter cond query) = eval (Filter cond (transform (eval query)))
 
     eval (Graph edgeop (FromTable table)) = evalGraph edgeop table
-    eval (Graph edgeop query) = eval(Graph edge_op (transform (eval query))) 
+    eval (Graph edgeop query) = eval(Graph edge_op (transform (eval query)))
 
 -- 3.2 & 3.3
 
@@ -613,5 +613,92 @@ similarities_query :: Query
 similarities_query = Sort "Value" $ myFilter (Graph edge_op (FromTable D.eight_hours ))
 
 -- 3.6 (Typos)
+
+-- I will calculate the distance beetween strings as levenshtein distance
+-- The code was inspired from this website: https://swizec.com/blog/levenshtein-distance-in-haskell/
+
+-- levenshtein with memoisation using arrays
+levenshtein :: (Eq a) => [a] -> [a] -> Int
+levenshtein xs ys = levMemo ! (n, m)
+  where levMemo = array ((0,0),(n,m)) [((i,j),lev i j) | i <- [0..n], j <- [0..m]] -- create the matrix
+        n = length xs
+        m = length ys
+        xa = listArray (1, n) xs
+        ya = listArray (1, m) ys
+        lev 0 v = v
+        lev u 0 = u
+        lev u v
+          | xa ! u == ya ! v = levMemo ! (u-1, v-1)
+          | otherwise        = 1 + minimum [levMemo ! (u, v-1),
+                                            levMemo ! (u-1, v),
+                                            levMemo ! (u-1, v-1)]
+
+{-
+-   extract the necessary column from the table with typos and the reference table (let's call these T and Ref);
+-   filter out only the values from T and Ref which don't have a perfect match in the other table - these are the problematic entries (this will help improve time performance);
+-   calculate the distance between each value from T and each value from Ref (distance = how similar the 2 strings are - you decide how to formally define this distance);
+-   for every value from T, its correct form is the value from Ref with the shortest distance to it;
+-   lastly, restore the original table, replacing the incorrect values from T with the correct values from Ref.
+-}
+fromQResultToTable :: QResult -> Table
+fromQResultToTable (Table t) = t
+fromQResultToTable _ = []
+
+fromQResultToList :: QResult -> [String]
+fromQResultToList (List l) = l
+fromQResultToList _ = []
+
+
+-- Filter the words that have typos for efficency use Filter queries
+filterOutMatchesAux :: Table -> String -> [String] -> Table
+filterOutMatchesAux table col listOfElements = fromQResultToTable (eval $ Filter (FNot $ In col listOfElements) (FromTable table) )
+
+filterOutMatches :: String -> Table -> Table -> Table
+filterOutMatches col t1 t2 = filterOutMatchesAux t1 col (fromQResultToList listOfElements) where
+    listOfElements = eval $ AsList col (FromTable t2)
+
+
+-- calculate the distance from word to every word in the table in the specified column
+distanceToEachWord :: String -> String -> Table -> [(String, Int)]
+distanceToEachWord word col table = map
+  (\ row
+     -> (extract_el row index, levenshtein word (extract_el row index))) (tail table) where
+    index = get_column col (head table)
+
+-- from the list of tuples with names and distances extract the word with the minimum distance
+extractNameWithMinimumDistance :: [(String, Int)] -> String
+extractNameWithMinimumDistance [] = ""
+extractNameWithMinimumDistance list = extractMin "" 999999 list where
+    extractMin soFar res [] = soFar
+    extractMin soFar res (x:xs) = if snd x < res then extractMin (fst x ) (snd x) xs else extractMin soFar res xs
+
+
+
+-- if a typo has been found, get the correct form by calculating the levensthein distance to all the words
+-- marked in the second table and replacing "word" with the that
+getRowIfTypo :: String -> String -> Row -> Table -> Row
+getRowIfTypo word col row table = map (\str -> if str == word then
+    extractNameWithMinimumDistance (distanceToEachWord word col table) else str) row
+
+
+-- goes through each row of the typo table with map
+-- filter the elements that have typos
+-- if the element has a typo then replace the value at index with the corrected form
+-- otherwise do nothing
+{-
+firstTableIncorrect = the first table that has been filtered
+secondTableIncorrect = the second table that has been filtered
+listOfElements = a list of Values from the given row (the words that contain typos)\
+indexTypo = the index of the column that needs to be corrected
+indexReference = the index of the column that we have as referance
+
+-}
 correct_table :: String -> Table -> Table -> Table
-correct_table col csv1 csv2 = [[]]
+correct_table col csv1 csv2 = map (\row -> if extract_el row indexTypo `elem` listOfElements then
+     getRowIfTypo (extract_el row indexTypo) col row secondTableIncorrect else row ) csv1 where
+        firstTableIncorrect = filterOutMatches col csv1 csv2
+        secondTableIncorrect = filterOutMatches col csv2 csv1
+        listOfElements = fromQResultToList (eval $ AsList col (FromTable firstTableIncorrect))
+        indexTypo = get_column col (head csv1)
+        indexReference = get_column col (head csv2)
+
